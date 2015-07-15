@@ -1,276 +1,252 @@
-////////////////////////////////////////////////////////////////////////////////
-//
-// JetResolution
-// -------------
-//
-//            11/05/2010 Philipp Schieferdecker <philipp.schieferdecker@cern.ch>
-////////////////////////////////////////////////////////////////////////////////
+#include <CondFormats/JetMETObjects/interface/JetResolution.h>
 
+#include <yaml-cpp/yaml.h>
 
-#include "CondFormats/JetMETObjects/interface/JetResolution.h"
-#include "CondFormats/JetMETObjects/interface/JetCorrectorParameters.h"
-
-#include "FWCore/MessageLogger/interface/MessageLogger.h"
-
-#include <TMath.h>
-
-
+#include <cmath>
 #include <iostream>
-#include <sstream>
-#include <cassert>
+#include <fstream>
 
+void JetResolutionObject::Variable::parse(const YAML::Node& node) {
+    name = node["name"].as<std::string>();
 
-using namespace std;
-
-
-////////////////////////////////////////////////////////////////////////////////
-// GLOBAL FUNCTION DEFINITIONS
-////////////////////////////////////////////////////////////////////////////////
-
-//______________________________________________________________________________
-double fnc_dscb(double*xx,double*pp);
-double fnc_gaussalpha(double*xx,double*pp);
-double fnc_gaussalpha1alpha2(double*xx,double*pp);
-
-
-////////////////////////////////////////////////////////////////////////////////
-// CONSTRUCTION / DESTRUCTION
-////////////////////////////////////////////////////////////////////////////////
-
-//______________________________________________________________________________
-JetResolution::JetResolution()
-  : resolutionFnc_(0)
-{
-  resolutionFnc_ = new TF1();
+    YAML::Node r = node["range"];
+    min = r[0].as<float>();
+    max = r[1].as<float>();
 }
 
-
-//______________________________________________________________________________
-JetResolution::JetResolution(const string& fileName,bool doGaussian)
-  : resolutionFnc_(0)
-{
-  initialize(fileName,doGaussian);
+void JetResolutionObject::Bin::parse(const YAML::Node& node) {
+    min = node[0].as<float>();
+    max = node[1].as<float>();
 }
 
+JetResolutionObject::Definition::Definition(const YAML::Node& definition) {
+    m_bins = definition["bins"].as<std::vector<std::string>>();
 
-//______________________________________________________________________________
-JetResolution::~JetResolution()
-{
-  delete resolutionFnc_;
-  for (unsigned i=0;i<parameterFncs_.size();i++) delete parameterFncs_[i];
-  for (unsigned i=0;i<parameters_.size();i++)    delete parameters_[i];
-}
+    for (size_t i = 0; i < definition["variables"].size(); i++) {
+        YAML::Node variable = definition["variables"][i];
 
-
-////////////////////////////////////////////////////////////////////////////////
-// IMPLEMENTATION OF MEMBER FUNCTIONS
-////////////////////////////////////////////////////////////////////////////////
-
-//______________________________________________________________________________
-void JetResolution::initialize(const string& fileName,bool doGaussian)
-{
-  size_t pos;
-
-  name_ = fileName;
-  pos = name_.find_last_of('.'); name_ = name_.substr(0,pos);
-  pos = name_.find_last_of('/'); name_ = name_.substr(pos+1);
-
-  JetCorrectorParameters resolutionPars(fileName,"resolution");
-  string fncname = "fResolution_" + name_;
-  string formula = resolutionPars.definitions().formula();
-  if      (doGaussian)                   resolutionFnc_=new TF1(fncname.c_str(),"gaus",0.,5.);
-  else if (formula=="DSCB")              resolutionFnc_=new TF1(fncname.c_str(),fnc_dscb,0.,5.,7);
-  else if (formula=="GaussAlpha1Alpha2") resolutionFnc_=new TF1(fncname.c_str(),fnc_gaussalpha1alpha2,-5.,5.,5);
-  else if (formula=="GaussAlpha")        resolutionFnc_=new TF1(fncname.c_str(),fnc_gaussalpha,-5.,5.,4);
-  else                                   resolutionFnc_=new TF1(fncname.c_str(),formula.c_str(),0.,5.);
-
-  resolutionFnc_->SetNpx(200);
-  resolutionFnc_->SetParName(0,"N");
-  resolutionFnc_->SetParameter(0,1.0);
-  unsigned nPar(1);
-
-  string tmp = resolutionPars.definitions().level();
-  pos = tmp.find(':');
-  while (!tmp.empty()) {
-    string paramAsStr = tmp.substr(0,pos);
-    if (!doGaussian||paramAsStr=="mean"||paramAsStr=="sigma") {
-      parameters_.push_back(new JetCorrectorParameters(fileName,paramAsStr));
-      formula = parameters_.back()->definitions().formula();
-      parameterFncs_.push_back(new TF1(("f"+paramAsStr+"_"+name()).c_str(),formula.c_str(),
-				       parameters_.back()->record(0).parameters()[0],
-				       parameters_.back()->record(0).parameters()[1]));
-      resolutionFnc_->SetParName(nPar,parameters_.back()->definitions().level().c_str());
-      nPar++;
-    }
-    tmp = (pos==string::npos) ? "" : tmp.substr(pos+1);
-    pos = tmp.find(':');
-  }
-
-  assert(nPar==(unsigned)resolutionFnc_->GetNpar());
-  assert(!doGaussian||nPar==3);
-}
-
-
-//______________________________________________________________________________
-TF1* JetResolution::resolutionEtaPt(float eta, float pt) const
-{
-  vector<float> x; x.push_back(eta);
-  vector<float> y; y.push_back(pt);
-  return resolution(x,y);
-}
-
-
-//______________________________________________________________________________
-TF1* JetResolution::resolution(const vector<float>& x,
-			       const vector<float>& y) const
-{
-  unsigned N(y.size());
-  for (unsigned iPar=0;iPar<parameters_.size();iPar++) {
-    int bin = parameters_[iPar]->binIndex(x);
-    assert(bin>=0);
-    assert(bin<(int)parameters_[iPar]->size());
-    const std::vector<float>& pars = parameters_[iPar]->record(bin).parameters();
-    for (unsigned i=2*N;i<pars.size();i++)
-      parameterFncs_[iPar]->SetParameter(i-2*N,pars[i]);
-    float yy[4] = {};
-    for (unsigned i=0;i<N;i++)
-      yy[i] = (y[i] < pars[2*i]) ? pars[2*i] : (y[i] > pars[2*i+1]) ? pars[2*i+1] : y[i];
-    resolutionFnc_->SetParameter(iPar+1,
-				 parameterFncs_[iPar]->Eval(yy[0],yy[1],yy[2],yy[3]));
-  }
-  return resolutionFnc_;
-}
-
-
-//______________________________________________________________________________
-TF1* JetResolution::parameterEta(const string& parameterName, float eta)
-{
-  vector<float> x; x.push_back(eta);
-  return parameter(parameterName,x);
-}
-
-
-//______________________________________________________________________________
-TF1* JetResolution::parameter(const string& parameterName,const vector<float>& x)
-{
-  TF1* result(0);
-  for (unsigned i=0;i<parameterFncs_.size()&&result==0;i++) {
-    string fncname = parameterFncs_[i]->GetName();
-    if (fncname.find("f"+parameterName)==0) {
-      stringstream ssname; ssname<<parameterFncs_[i]->GetName();
-      for (unsigned ii=0;ii<x.size();ii++)
-	ssname<<"_"<<parameters_[i]->definitions().binVar(ii)<<x[ii];
-      result = (TF1*)parameterFncs_[i]->Clone();
-      result->SetName(ssname.str().c_str());
-      int N = parameters_[i]->definitions().nParVar();
-      int bin = parameters_[i]->binIndex(x);
-      assert(bin>=0);
-      assert(bin<(int)parameters_[i]->size());
-      const std::vector<float>& pars = parameters_[i]->record(bin).parameters();
-      for (unsigned ii=2*N;ii<pars.size();ii++) result->SetParameter(ii-2*N,pars[ii]);
-    }
-  }
-
-  if (0==result) cerr<<"JetResolution::parameter() ERROR: no parameter "
-		     <<parameterName<<" found."<<endl;
-
-  return result;
-}
-
-
-//______________________________________________________________________________
-double JetResolution::parameterEtaEval(const std::string& parameterName, float eta, float pt)
-{
-  TF1* func(0);
-  JetCorrectorParameters* params(0);
-  for (std::vector<TF1*>::size_type ifunc = 0; ifunc < parameterFncs_.size(); ++ifunc)
-    {
-      std::string fncname = parameterFncs_[ifunc]->GetName();
-      if ( !(fncname.find("f"+parameterName) == 0) ) continue;
-      params = parameters_[ifunc];
-      func = (TF1*)parameterFncs_[ifunc];
-      break;
+        Variable v(variable);
+        m_variables.push_back(v);
     }
 
-  if (!func)
-    edm::LogError("ParameterNotFound") << "JetResolution::parameterEtaEval(): no parameter \""
-				  << parameterName << "\" found" << std::endl;
+    n_parameters = definition["parameters"].as<uint8_t>();
 
-  std::vector<float> etas; etas.push_back(eta);
-  int bin = params->binIndex(etas);
+    m_formula_str = definition["formula"].as<std::string>();
 
-  if ( !(0 <= bin && bin < (int)params->size() ) )
-    edm::LogError("ParameterNotFound") << "JetResolution::parameterEtaEval(): bin out of range: "
-				       << bin << std::endl;
+    init();
+}
 
-  const std::vector<float>& pars = params->record(bin).parameters();
+void JetResolutionObject::Definition::init() {
+    if (m_formula_str.size())
+        m_formula = std::shared_ptr<TFormula>(new TFormula("jet_resolution_formula", m_formula_str.c_str()));
+}
 
-  int N = params->definitions().nParVar();
-  for (unsigned ii = 2*N; ii < pars.size(); ++ii)
-    {
-      func->SetParameter(ii-2*N, pars[ii]);
+JetResolutionObject::Record::Record(const YAML::Node& record) {
+
+    for (size_t i = 0; i < record["bins"].size(); i++) {
+        YAML::Node bin = record["bins"][i];
+
+        Bin b(bin);
+        m_bins_values.push_back(b);
     }
 
-  return func->Eval(pt);
+    m_parameters_values = record["parameters"].as<std::vector<float>>();
 }
 
+JetResolutionObject::JetResolutionObject(const std::string& filename) {
+    YAML::Node object = YAML::LoadFile(filename);
 
-////////////////////////////////////////////////////////////////////////////////
-// IMPLEMENTATION OF GLOBAL FUNCTIONS
-////////////////////////////////////////////////////////////////////////////////
+    m_definition = Definition(object["definition"]);
 
-//______________________________________________________________________________
-double fnc_dscb(double*xx,double*pp)
-{
-  double x   = xx[0];
-  double N   = pp[0];
-  double mu  = pp[1];
-  double sig = pp[2];
-  double a1  = pp[3];
-  double p1  = pp[4];
-  double a2  = pp[5];
-  double p2  = pp[6];
+    for (size_t i = 0; i < object["records"].size(); i++) {
+        YAML::Node record = object["records"][i];
+        m_records.push_back(Record(record));
+    }
 
-  double u   = (x-mu)/sig;
-  double A1  = TMath::Power(p1/TMath::Abs(a1),p1)*TMath::Exp(-a1*a1/2);
-  double A2  = TMath::Power(p2/TMath::Abs(a2),p2)*TMath::Exp(-a2*a2/2);
-  double B1  = p1/TMath::Abs(a1) - TMath::Abs(a1);
-  double B2  = p2/TMath::Abs(a2) - TMath::Abs(a2);
-
-  double result(N);
-  if      (u<-a1) result *= A1*TMath::Power(B1-u,-p1);
-  else if (u<a2)  result *= TMath::Exp(-u*u/2);
-  else            result *= A2*TMath::Power(B2+u,-p2);
-  return result;
+    m_valid = true;
 }
 
+JetResolutionObject::JetResolutionObject(const JetResolutionObject& object) {
+    m_definition = object.m_definition;
+    m_records = object.m_records;
+    m_valid = object.m_valid;
 
-//______________________________________________________________________________
-double fnc_gaussalpha(double *v, double *par)
-{
-    double N    =par[0];
-    double mean =par[1];
-    double sigma=par[2];
-    double alpha=par[3];
-    double t    =TMath::Abs((v[0]-mean)/sigma);
-    double cut  = 1.0;
-    return (t<=cut) ? N*TMath::Exp(-0.5*t*t) : N*TMath::Exp(-0.5*(alpha*(t-cut)+cut*cut));
+    m_definition.init();
+}
+        
+JetResolutionObject::JetResolutionObject() {
+    // Empty
+}
+        
+
+void JetResolutionObject::dump() const {
+    std::cout << "Definition: " << std::endl;
+    std::cout << "    Number of binning variables: " << m_definition.nBins() << std::endl;
+    std::cout << "        ";
+    for (const auto& bin: m_definition.getBins()) {
+        std::cout << bin << ", ";
+    }
+    std::cout << std::endl;
+    std::cout << "    Number of variables: " << m_definition.nVariables() << std::endl;
+    std::cout << "        ";
+    for (const auto& bin: m_definition.getVariables()) {
+        std::cout << bin.name << " [" << bin.min << " - " << bin.max << "], ";
+    }
+    std::cout << std::endl;
+    std::cout << "    Number of parameters: " << m_definition.nParameters() << std::endl;
+    std::cout << "    Formula: " << m_definition.getFormulaString() << std::endl;
+
+    std::cout << std::endl << "Bin contents" << std::endl;
+
+    for (const auto& record: m_records) {
+        std::cout << "    Bins" << std::endl;
+        size_t index = 0;
+        for (const auto& bin: record.getBinsValues()) {
+            std::cout << "        " << m_definition.getBinName(index) << " [" << bin.min << " - " << bin.max << "]" << std::endl;
+            index++;
+        }
+        
+        std::cout << "    Parameters" << std::endl;
+        index = 0;
+        for (const auto& par: record.getParametersValues()) {
+            std::cout << "        Parameter #" << index << " = " << par << std::endl;
+            index++;
+        }
+    }
 }
 
+void JetResolutionObject::saveToFile(const std::string& file) const {
 
-//______________________________________________________________________________
-double fnc_gaussalpha1alpha2(double *v, double *par)
-{
-    double N     =par[0];
-    double mean  =par[1];
-    double sigma =par[2];
-    double alpha1=par[3];
-    double alpha2=par[4];
-    double t     =TMath::Abs((v[0]-mean)/sigma);
-    double cut = 1.0;
-    return
-      (t<=cut) ? N*TMath::Exp(-0.5*t*t) :
-      ((v[0]-mean)>=0) ? N*TMath::Exp(-0.5*(alpha1*(t-cut)+cut*cut)) :
-      N*TMath::Exp(-0.5*(alpha2*(t-cut)+cut*cut));
+    YAML::Node root;
+
+    root["definition"]["bins"] = m_definition.getBins();
+    
+    YAML::Node variables;
+    for (const auto& variable: m_definition.getVariables()) {
+        YAML::Node v;
+        v["name"] = variable.name;
+        v["range"][0] = variable.min;
+        v["range"][1] = variable.max;
+
+        variables.push_back(v);
+    }
+
+    root["definition"]["variables"] = variables;
+
+    root["definition"]["parameters"] = m_definition.nParameters();
+    root["definition"]["formula"] = m_definition.getFormulaString();
+
+    // Records
+    YAML::Node records;
+    for (const Record& record: m_records) {
+        YAML::Node r;
+        r["parameters"] = record.getParametersValues();
+
+        YAML::Node bins;
+        for (const Bin& bin: record.getBinsValues()) {
+            YAML::Node b;
+            b.push_back(bin.min);
+            b.push_back(bin.max);
+
+            bins.push_back(b);
+        }
+        r["bins"] = bins;
+
+        records.push_back(r);
+    }
+
+    root["records"] = records;
+
+    std::ofstream fout(file);
+    YAML::Emitter emitter(fout);
+    emitter.SetSeqFormat(YAML::Flow);
+    emitter << root;
 }
 
+const JetResolutionObject::Record* JetResolutionObject::getRecord(const std::vector<float>& bins) {
+    // Find record for bins
+    if (m_definition.nBins() != bins.size())
+        return nullptr;
+
+    // Iterate over all records, and find the one for which all bins are valid
+    const Record* good_record = nullptr;
+    for (const auto& record: m_records) {
+
+        // Iterate over bins
+        size_t valid_bins = 0;
+        size_t current_bin = 0;
+        for (const auto& bin: record.getBinsValues()) {
+            if (bin.is_inside(bins[current_bin]))
+                valid_bins++;
+
+            current_bin++;
+        }
+
+        if (valid_bins == m_definition.nBins()) {
+            good_record = &record;
+            break;
+        }
+    }
+
+    return good_record;
+}
+
+float JetResolutionObject::evaluateFormula(const JetResolutionObject::Record& record, const std::vector<float>& variables) {
+
+    // Set parameters
+    TFormula* formula = m_definition.getFormula();
+    if (! formula)
+        return 1;
+
+    const std::vector<float>& parameters = record.getParametersValues();
+    for (size_t index = 0; index < parameters.size(); index++) {
+        formula->SetParameter(index, parameters[index]);
+    }
+
+    double variables_[4] = {0};
+    size_t index = 0;
+    for (float variable: variables) {
+        variables_[index] = clip(variable, m_definition.getVariables()[index].min, m_definition.getVariables()[index].max);
+        index++;
+    }
+
+    return formula->EvalPar(variables_);
+}
+
+JetResolution::JetResolution(const std::string& filename) {
+    m_object = std::shared_ptr<JetResolutionObject>(new JetResolutionObject(filename));
+}
+
+JetResolution::JetResolution(const JetResolutionObject& object) {
+    m_object = std::shared_ptr<JetResolutionObject>(new JetResolutionObject(object));
+}
+
+float JetResolution::getResolution(float pt, float eta, float rho) {
+    const JetResolutionObject::Record* record = m_object->getRecord({eta});
+    if (! record)
+        return 1;
+
+    return m_object->evaluateFormula(*record, {pt, rho});
+}
+
+JetResolutionScaleFactor::JetResolutionScaleFactor(const std::string& filename) {
+    m_object = std::shared_ptr<JetResolutionObject>(new JetResolutionObject(filename));
+}
+
+JetResolutionScaleFactor::JetResolutionScaleFactor(const JetResolutionObject& object) {
+    m_object = std::shared_ptr<JetResolutionObject>(new JetResolutionObject(object));
+}
+
+float JetResolutionScaleFactor::getScaleFactor(float eta, Variation variation/* = Variation::NOMINAL*/) {
+    const JetResolutionObject::Record* record = m_object->getRecord({static_cast<float>(fabs(eta))});
+    if (! record)
+        return 1;
+
+    const std::vector<float>& parameters = record->getParametersValues();
+    return parameters[static_cast<size_t>(variation)];
+}
+
+#include "FWCore/Utilities/interface/typelookup.h"
+TYPELOOKUP_DATA_REG(JetResolutionObject);
+TYPELOOKUP_DATA_REG(JetResolution);
+TYPELOOKUP_DATA_REG(JetResolutionScaleFactor);

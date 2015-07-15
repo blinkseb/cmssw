@@ -1,0 +1,15 @@
+definition:
+    bins: ["JetEta"]
+    variables:
+        - { name: "JetPt", range: [10, 7000] }
+        - { name: "JetRho", range: [0, 100] }
+    parameters: 2
+    formula: "[0] * x + [1] * y"
+
+records:
+    -   bins:
+            - [-5.0, 0.0]
+        parameters: [1, 1]
+    -   bins:
+            - [0.0, 5.0]
+        parameters: [2, 2]

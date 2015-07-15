@@ -35,6 +35,20 @@
 
   <class name="METCorrectorParameters"/>
 
+  <class name="JetResolutionObject"/>
+  <class name="JetResolutionObject::Definition"/>
+  <class name="JetResolutionObject::Record"/>
+  <class name="JetResolutionObject::Variable"/>
+  <class name="JetResolutionObject::Bin"/>
+  <class name="std::vector<JetResolutionObject::Record>"/>
+  <class name="std::vector<JetResolutionObject::Variable>"/>
+  <class name="std::vector<JetResolutionObject::Bin>"/>
+  <class name="JetResolution">
+      <field name="m_object" transient="true"/>
+  </class>
+  <class name="JetResolutionScaleFactor">
+      <field name="m_object" transient="true"/>
+  </class>
 
 </selection>
 </lcgdict>

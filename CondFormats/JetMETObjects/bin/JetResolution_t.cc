@@ -7,7 +7,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#include "CondFormats/JetMETObjects/interface/JetResolution.h"
+#include "CondFormats/JetMETObjects/interface/JetResolution_old.h"
 
 
 #include <TROOT.h>
@@ -79,9 +79,9 @@ int main(int argc,char**argv)
   cout<<phiFileName<<endl;
   cout<<endl;
 
-  JetResolution ptResol(ptFileName,doGaussian);
-  JetResolution etaResol(etaFileName,doGaussian);
-  JetResolution phiResol(phiFileName,doGaussian);
+  JetResolutionOld ptResol(ptFileName,doGaussian);
+  JetResolutionOld etaResol(etaFileName,doGaussian);
+  JetResolutionOld phiResol(phiFileName,doGaussian);
   
 
   // SIMPLE TEST

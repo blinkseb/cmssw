@@ -5,6 +5,7 @@
 <use   name="boost_serialization"/>
 <use   name="root"/>
 <use   name="rootmath"/>
+<use   name="yaml-cpp"/>
 
 <use   name="clhep"/>
 <use   name="CondFormats/PhysicsToolsObjects"/>

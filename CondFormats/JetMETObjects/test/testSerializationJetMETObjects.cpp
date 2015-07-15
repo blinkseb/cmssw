@@ -21,5 +21,11 @@ int main()
     testSerialization<QGLikelihoodCategory>();
     testSerialization<QGLikelihoodObject>();
 
+    testSerialization<JetResolutionObject>();
+    testSerialization<JetResolutionObject::Definition>();
+    testSerialization<JetResolutionObject::Record>();
+    testSerialization<JetResolutionObject::Variable>();
+    testSerialization<JetResolutionObject::Bin>();
+
     return 0;
 }
