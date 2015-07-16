@@ -16,28 +16,28 @@ process.PoolDBESSource = cms.ESSource("PoolDBESSource",
       toGet = cms.VPSet(
         cms.PSet(
             record = cms.string('JERRcd'),
-            tag    = cms.string('JetResolutionObject_v1_JER_example'),
-            label  = cms.untracked.string('JER_example')
+            tag    = cms.string('JetResolutionObject_Summer15_V5_MC_JER_AK4PFchs'),
+            label  = cms.untracked.string('Summer15_V5_MC_JER_AK4PFchs')
         ),
-        cms.PSet(
-            record = cms.string('JERRcd'),
-            tag    = cms.string('JetResolutionObject_v1_JER_SF_AK5PF_Run1'),
-            label  = cms.untracked.string('JER_SF_AK5PF_Run1')
-        ),
+        #cms.PSet(
+            #record = cms.string('JERRcd'),
+            #tag    = cms.string('JetResolutionObject_v1_JER_SF_AK5PF_Run1'),
+            #label  = cms.untracked.string('JER_SF_AK5PF_Run1')
+        #),
       ),
       connect = cms.string('sqlite:JER_v1.db')
 )
 
 
 process.demo1 = cms.EDAnalyzer('JetResolutionDBReader', 
-        algo = cms.untracked.string('JER_example'),
+        algo = cms.untracked.string('Summer15_V5_MC_JER_AK4PFchs'),
         createTextFile = cms.untracked.bool(True)
         )
 
-process.demo2 = cms.EDAnalyzer('JetResolutionDBReader', 
-        algo = cms.untracked.string('JER_SF_AK5PF_Run1'),
-        createTextFile = cms.untracked.bool(True)
-        )
+#process.demo2 = cms.EDAnalyzer('JetResolutionDBReader', 
+        #algo = cms.untracked.string('JER_SF_AK5PF_Run1'),
+        #createTextFile = cms.untracked.bool(True)
+        #)
 
 
-process.p = cms.Path(process.demo1 * process.demo2)
+process.p = cms.Path(process.demo1)

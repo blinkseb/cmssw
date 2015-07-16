@@ -24,8 +24,7 @@ int main()
     testSerialization<JetResolutionObject>();
     testSerialization<JetResolutionObject::Definition>();
     testSerialization<JetResolutionObject::Record>();
-    testSerialization<JetResolutionObject::Variable>();
-    testSerialization<JetResolutionObject::Bin>();
+    testSerialization<JetResolutionObject::Range>();
 
     return 0;
 }

@@ -63,8 +63,8 @@ void JetResolutionDBReader::analyze(const edm::Event& iEvent, const edm::EventSe
   }
 
   if (mCreateTextFile) {
-    jerObjectHandle->saveToFile(mAlgo + ".yml");
-    std::cout << "JER payload saved as " << mAlgo << ".yml" << std::endl;
+    jerObjectHandle->saveToFile(mAlgo + ".txt");
+    std::cout << "JER payload saved as " << mAlgo << ".txt" << std::endl;
   }
 }
 

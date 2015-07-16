@@ -29,44 +29,21 @@ class JetResolutionObject {
 
     public:
 
-    struct Variable {
-        std::string name;
+    struct Range {
         float min;
         float max;
 
-        Variable() {
+        Range() {
             // Empty
         }
 
-        Variable(const YAML::Node& node) {
-            parse(node);
-        }
-
-        void parse(const YAML::Node& node);
-
-        COND_SERIALIZABLE;
-    };
-
-    struct Bin {
-        float min;
-        float max;
-
-        Bin() {
-            // Empty
-        }
-
-        Bin(const YAML::Node& node) {
-            parse(node);
+        Range(float min, float max) {
+            this->min = min;
+            this->max = max;
         }
 
         bool is_inside(float value) const {
             return (value >= min) && (value <= max);
-        }
-
-        void parse(const YAML::Node& node);
-
-        int operator< (const Bin& other) const {
-            return min < other.min;
         }
 
         COND_SERIALIZABLE;
@@ -79,11 +56,7 @@ class JetResolutionObject {
                 // Empty
             }
 
-            Definition(const YAML::Node& definition);
-
-            uint8_t nParameters() const {
-                return n_parameters;
-            }
+            Definition(const std::string& definition);
 
             size_t nVariables() const {
                 return m_variables.size();
@@ -93,7 +66,7 @@ class JetResolutionObject {
                 return m_bins;
             }
 
-            const std::vector<Variable>& getVariables() const {
+            const std::vector<std::string>& getVariables() const {
                 return m_variables;
             }
 
@@ -106,7 +79,7 @@ class JetResolutionObject {
             }
 
             std::string getVariableName(size_t variable) const {
-                return m_variables[variable].name;
+                return m_variables[variable];
             }
 
             std::string getFormulaString() const {
@@ -120,9 +93,8 @@ class JetResolutionObject {
             void init();
 
         private:
-            uint8_t n_parameters;
-            std::vector<Variable> m_variables;
             std::vector<std::string> m_bins;
+            std::vector<std::string> m_variables;
             std::string m_formula_str;
             std::shared_ptr<TFormula> m_formula COND_TRANSIENT;
 
@@ -135,18 +107,31 @@ class JetResolutionObject {
                 // Empty
             }
 
-            Record(const YAML::Node& record);
+            Record(const std::string& record, const Definition& def);
 
-            const std::vector<Bin>& getBinsValues() const {
-                return m_bins_values;
+            const std::vector<Range>& getBinsRange() const {
+                return m_bins_range;
+            }
+
+            const std::vector<Range>& getVariablesRange() const {
+                return m_variables_range;
             }
 
             const std::vector<float>& getParametersValues() const {
                 return m_parameters_values;
             }
 
+            size_t nVariables() const {
+                return m_variables_range.size();
+            }
+
+            size_t nParameters() const {
+                return m_parameters_values.size();    
+            }
+
         private:
-            std::vector<Bin> m_bins_values;
+            std::vector<Range> m_bins_range;
+            std::vector<Range> m_variables_range;
             std::vector<float> m_parameters_values;
 
         COND_SERIALIZABLE;

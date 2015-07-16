@@ -1,37 +1,37 @@
 #include <CondFormats/JetMETObjects/interface/JetResolution.h>
+#include <CondFormats/JetMETObjects/interface/Utilities.h>
 
 #include <yaml-cpp/yaml.h>
 
 #include <cmath>
 #include <iostream>
 #include <fstream>
+#include <iomanip>
 
-void JetResolutionObject::Variable::parse(const YAML::Node& node) {
-    name = node["name"].as<std::string>();
+std::string getDefinitionLine(const std::string& line) {
+    size_t first = line.find ('{');
+    size_t last = line.find ('}');
 
-    YAML::Node r = node["range"];
-    min = r[0].as<float>();
-    max = r[1].as<float>();
+    if (first != std::string::npos && last != std::string::npos && first < last)
+        return std::string(line, first + 1, last - first - 1);
+
+    return "";
 }
 
-void JetResolutionObject::Bin::parse(const YAML::Node& node) {
-    min = node[0].as<float>();
-    max = node[1].as<float>();
-}
+JetResolutionObject::Definition::Definition(const std::string& definition) {
 
-JetResolutionObject::Definition::Definition(const YAML::Node& definition) {
-    m_bins = definition["bins"].as<std::vector<std::string>>();
-
-    for (size_t i = 0; i < definition["variables"].size(); i++) {
-        YAML::Node variable = definition["variables"][i];
-
-        Variable v(variable);
-        m_variables.push_back(v);
+    std::vector<std::string> tokens = getTokens(definition);
+    size_t n_bins = std::stoul(tokens[0]);
+    for (size_t i = 0; i < n_bins; i++) {
+        m_bins.push_back(tokens[i + 1]);
     }
 
-    n_parameters = definition["parameters"].as<uint8_t>();
+    size_t n_variables = std::stoul(tokens[n_bins + 1]);
+    for (size_t i = 0; i < n_variables; i++) {
+        m_variables.push_back(tokens[n_bins + 2 + i]);
+    }
 
-    m_formula_str = definition["formula"].as<std::string>();
+    m_formula_str = tokens[n_bins + n_variables + 2];
 
     init();
 }
@@ -41,26 +41,47 @@ void JetResolutionObject::Definition::init() {
         m_formula = std::shared_ptr<TFormula>(new TFormula("jet_resolution_formula", m_formula_str.c_str()));
 }
 
-JetResolutionObject::Record::Record(const YAML::Node& record) {
+JetResolutionObject::Record::Record(const std::string& line, const Definition& def) {
 
-    for (size_t i = 0; i < record["bins"].size(); i++) {
-        YAML::Node bin = record["bins"][i];
+    std::vector<std::string> tokens = getTokens(line);
 
-        Bin b(bin);
-        m_bins_values.push_back(b);
+    size_t pos = 0;
+
+    for (size_t i = 0; i < def.nBins(); i++) {
+        Range r(std::stof(tokens[pos]), std::stof(tokens[pos + 1]));
+        pos += 2;
+        m_bins_range.push_back(r);
     }
 
-    m_parameters_values = record["parameters"].as<std::vector<float>>();
+    size_t n_parameters = std::stoul(tokens[pos++]);
+
+    for (size_t i = 0; i < def.nVariables(); i++) {
+        Range r(std::stof(tokens[pos]), std::stof(tokens[pos + 1]));
+        pos += 2;
+        m_variables_range.push_back(r);
+        n_parameters -= 2;
+    }
+
+    for (size_t i = 0; i < n_parameters; i++) {
+        m_parameters_values.push_back(std::stof(tokens[pos++]));
+    }
 }
 
 JetResolutionObject::JetResolutionObject(const std::string& filename) {
-    YAML::Node object = YAML::LoadFile(filename);
 
-    m_definition = Definition(object["definition"]);
+    // Parse file
+    std::ifstream f(filename);
+    for (std::string line; std::getline(f, line); ) {
+        if ((line.size() == 0) || (line[0] == '#'))
+            continue;
 
-    for (size_t i = 0; i < object["records"].size(); i++) {
-        YAML::Node record = object["records"][i];
-        m_records.push_back(Record(record));
+        std::string definition = getDefinitionLine(line);
+
+        if (definition.size() > 0) {
+            m_definition = Definition(definition);
+        } else {
+            m_records.push_back(Record(line, m_definition));
+        }
     }
 
     m_valid = true;
@@ -90,10 +111,9 @@ void JetResolutionObject::dump() const {
     std::cout << "    Number of variables: " << m_definition.nVariables() << std::endl;
     std::cout << "        ";
     for (const auto& bin: m_definition.getVariables()) {
-        std::cout << bin.name << " [" << bin.min << " - " << bin.max << "], ";
+        std::cout << bin << ", ";
     }
     std::cout << std::endl;
-    std::cout << "    Number of parameters: " << m_definition.nParameters() << std::endl;
     std::cout << "    Formula: " << m_definition.getFormulaString() << std::endl;
 
     std::cout << std::endl << "Bin contents" << std::endl;
@@ -101,8 +121,15 @@ void JetResolutionObject::dump() const {
     for (const auto& record: m_records) {
         std::cout << "    Bins" << std::endl;
         size_t index = 0;
-        for (const auto& bin: record.getBinsValues()) {
+        for (const auto& bin: record.getBinsRange()) {
             std::cout << "        " << m_definition.getBinName(index) << " [" << bin.min << " - " << bin.max << "]" << std::endl;
+            index++;
+        }
+
+        std::cout << "    Variables" << std::endl;
+        index = 0;
+        for (const auto& r: record.getVariablesRange()) {
+            std::cout << "        " << m_definition.getVariableName(index) << " [" << r.min << " - " << r.max << "] " << std::endl;
             index++;
         }
         
@@ -116,51 +143,41 @@ void JetResolutionObject::dump() const {
 }
 
 void JetResolutionObject::saveToFile(const std::string& file) const {
-
-    YAML::Node root;
-
-    root["definition"]["bins"] = m_definition.getBins();
     
-    YAML::Node variables;
-    for (const auto& variable: m_definition.getVariables()) {
-        YAML::Node v;
-        v["name"] = variable.name;
-        v["range"][0] = variable.min;
-        v["range"][1] = variable.max;
+    std::ofstream fout(file);
+    fout.setf(std::ios::right);
 
-        variables.push_back(v);
-    }
+    // Definition
+    fout << "{" << m_definition.nBins();
 
-    root["definition"]["variables"] = variables;
+    for (auto& bin: m_definition.getBins())
+        fout << "    " << bin;
 
-    root["definition"]["parameters"] = m_definition.nParameters();
-    root["definition"]["formula"] = m_definition.getFormulaString();
+    fout << "    " << m_definition.nVariables();
+
+    for (auto& var: m_definition.getVariables())
+        fout << "    " << var;
+
+    fout << "    " << m_definition.getFormulaString() << "    Resolution}" << std::endl;
 
     // Records
-    YAML::Node records;
-    for (const Record& record: m_records) {
-        YAML::Node r;
-        r["parameters"] = record.getParametersValues();
-
-        YAML::Node bins;
-        for (const Bin& bin: record.getBinsValues()) {
-            YAML::Node b;
-            b.push_back(bin.min);
-            b.push_back(bin.max);
-
-            bins.push_back(b);
+    for (auto& record: m_records) {
+        for (auto& r: record.getBinsRange()) {
+            fout << std::left << std::setw(15) << r.min << std::setw(15) << r.max << std::setw(15);
         }
-        r["bins"] = bins;
+        fout << (record.nVariables() * 2 + record.nParameters()) << std::setw(15);
 
-        records.push_back(r);
+        for (auto& r: record.getVariablesRange()) {
+            fout << r.min << std::setw(15) << r.max << std::setw(15);
+        }
+
+        for (auto& p: record.getParametersValues()) {
+            fout << p << std::setw(15);
+        }
+
+        fout << std::endl << std::setw(0);
     }
 
-    root["records"] = records;
-
-    std::ofstream fout(file);
-    YAML::Emitter emitter(fout);
-    emitter.SetSeqFormat(YAML::Flow);
-    emitter << root;
 }
 
 const JetResolutionObject::Record* JetResolutionObject::getRecord(const std::vector<float>& bins) {
@@ -175,7 +192,7 @@ const JetResolutionObject::Record* JetResolutionObject::getRecord(const std::vec
         // Iterate over bins
         size_t valid_bins = 0;
         size_t current_bin = 0;
-        for (const auto& bin: record.getBinsValues()) {
+        for (const auto& bin: record.getBinsRange()) {
             if (bin.is_inside(bins[current_bin]))
                 valid_bins++;
 
@@ -206,7 +223,7 @@ float JetResolutionObject::evaluateFormula(const JetResolutionObject::Record& re
     double variables_[4] = {0};
     size_t index = 0;
     for (float variable: variables) {
-        variables_[index] = clip(variable, m_definition.getVariables()[index].min, m_definition.getVariables()[index].max);
+        variables_[index] = clip(variable, record.getVariablesRange()[index].min, record.getVariablesRange()[index].max);
         index++;
     }
 
