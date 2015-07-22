@@ -34,16 +34,23 @@ private:
   virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
   virtual void endJob() override ;
  
-  std::string mAlgo;
-  bool mCreateTextFile, mPrintScreen;
+  std::string m_algo;
+  std::string m_era;
+  std::string m_tag;
+
+  bool m_save_file;
+  bool m_print;
 };
 
 
 JetResolutionDBReader::JetResolutionDBReader(const edm::ParameterSet& iConfig)
 {
-  mAlgo           = iConfig.getUntrackedParameter<std::string>("algo");
-  mPrintScreen    = iConfig.getUntrackedParameter<bool>("printScreen", true);
-  mCreateTextFile = iConfig.getUntrackedParameter<bool>("createTextFile", false);
+  m_era           = iConfig.getUntrackedParameter<std::string>("era");
+  m_algo          = iConfig.getUntrackedParameter<std::string>("algorithm");
+  m_print         = iConfig.getUntrackedParameter<bool>("dump", true);
+  m_save_file     = iConfig.getUntrackedParameter<bool>("saveFile", false);
+
+  m_tag = m_era + "_" + m_algo;
 }
 
 
@@ -55,16 +62,17 @@ JetResolutionDBReader::~JetResolutionDBReader()
 void JetResolutionDBReader::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
   edm::ESHandle<JetResolutionObject> jerObjectHandle;
-  std::cout << "Inspecting JER payload for algo: "<< mAlgo << std::endl;
-  iSetup.get<JERRcd>().get(mAlgo, jerObjectHandle);
+  std::cout << "Inspecting JER payload for tag: "<< m_tag << std::endl;
 
-  if (mPrintScreen) {
+  iSetup.get<JERRcd>().get(m_tag, jerObjectHandle);
+
+  if (m_print) {
     jerObjectHandle->dump();
   }
 
-  if (mCreateTextFile) {
-    jerObjectHandle->saveToFile(mAlgo + ".txt");
-    std::cout << "JER payload saved as " << mAlgo << ".txt" << std::endl;
+  if (m_save_file) {
+    jerObjectHandle->saveToFile(m_tag + ".txt");
+    std::cout << "JER payload saved as " << m_tag << ".txt" << std::endl;
   }
 }
 

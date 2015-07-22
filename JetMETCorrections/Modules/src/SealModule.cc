@@ -60,6 +60,7 @@ DEFINE_FWK_EVENTSETUP_MODULE(QGLikelihoodESProducer);
 DEFINE_FWK_EVENTSETUP_MODULE(QGLikelihoodSystematicsESProducer);
 
 DEFINE_FWK_EVENTSETUP_MODULE(JetResolutionESProducer);
+DEFINE_FWK_EVENTSETUP_MODULE(JetResolutionScaleFactorESProducer);
 
 
 //--------------- Generic LX corrections --------------------

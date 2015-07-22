@@ -20,25 +20,67 @@ class JetResolutionESProducer : public edm::ESProducer
 {
     private:
         edm::ParameterSet mParameterSet;
-        std::string mAlgo;
+        std::string m_era;
+        std::string m_algo;
+        std::string m_tag;
 
     public:
         JetResolutionESProducer(edm::ParameterSet const& fConfig) : mParameterSet(fConfig) 
         {
             std::string label = fConfig.getParameter<std::string>("@module_label"); 
-            mAlgo             = fConfig.getParameter<std::string>("algorithm");
+            m_era             = fConfig.getParameter<std::string>("era");
+            m_algo            = fConfig.getParameter<std::string>("algorithm");
 
-            setWhatProduced(this, mAlgo);
+            m_tag = m_era + "_" + m_algo;
+
+            setWhatProduced(this, m_tag);
         }
 
         ~JetResolutionESProducer() {}
 
-        boost::shared_ptr<JetResolution> produce(JERRcd const& iRecord) 
-        {
+        boost::shared_ptr<JetResolution> produce(JERRcd const& iRecord) {
+            
+            // Get object from record
             edm::ESHandle<JetResolutionObject> jerObjectHandle;
-            iRecord.get(mAlgo, jerObjectHandle); 
+            iRecord.get(m_tag, jerObjectHandle);
+
+            // Convert this object to a JetResolution object
             JetResolutionObject const& jerObject = (*jerObjectHandle);
             return boost::shared_ptr<JetResolution>(new JetResolution(jerObject));
+        }
+};
+
+class JetResolutionScaleFactorESProducer : public edm::ESProducer
+{
+    private:
+        edm::ParameterSet mParameterSet;
+        std::string m_era;
+        std::string m_algo;
+        std::string m_tag;
+
+    public:
+        JetResolutionScaleFactorESProducer(edm::ParameterSet const& fConfig) : mParameterSet(fConfig) 
+        {
+            std::string label = fConfig.getParameter<std::string>("@module_label"); 
+            m_era             = fConfig.getParameter<std::string>("era");
+            m_algo            = fConfig.getParameter<std::string>("algorithm");
+
+            m_tag = m_era + "_" + m_algo;
+
+            setWhatProduced(this, m_tag);
+        }
+
+        ~JetResolutionScaleFactorESProducer() {}
+
+        boost::shared_ptr<JetResolutionScaleFactor> produce(JERRcd const& iRecord) {
+            
+            // Get object from record
+            edm::ESHandle<JetResolutionObject> jerObjectHandle;
+            iRecord.get(m_tag, jerObjectHandle);
+
+            // Convert this object to a JetResolution object
+            JetResolutionObject const& jerObject = (*jerObjectHandle);
+            return boost::shared_ptr<JetResolutionScaleFactor>(new JetResolutionScaleFactor(jerObject));
         }
 };
 #endif

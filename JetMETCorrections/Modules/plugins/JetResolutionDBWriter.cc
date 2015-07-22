@@ -24,24 +24,29 @@ class JetResolutionDBWriter : public edm::EDAnalyzer
   ~JetResolutionDBWriter() {}
 
  private:
-  std::string algo;
-  std::string path;
+  std::string m_algo;
+  std::string m_era;
+  std::string m_tag;
+  std::string m_path;
 };
 
 // Constructor
 JetResolutionDBWriter::JetResolutionDBWriter(const edm::ParameterSet& pSet)
 {
-  algo   = pSet.getUntrackedParameter<std::string>("algo");
-  path   = pSet.getUntrackedParameter<edm::FileInPath>("file").fullPath();
+  m_era  = pSet.getUntrackedParameter<std::string>("era");
+  m_algo = pSet.getUntrackedParameter<std::string>("algorithm");
+  m_path = pSet.getUntrackedParameter<edm::FileInPath>("file").fullPath();
+
+  m_tag = m_era + "_" + m_algo;
 }
 
 // Begin Job
 void JetResolutionDBWriter::beginJob()
 {
 
-    std::cout << "Loading jet resolution from '" << path << "'" << std::endl;
+    std::cout << "Loading data from '" << m_path << "'" << std::endl;
 
-    JetResolutionObject* jerObject = new JetResolutionObject(path);
+    JetResolutionObject* jerObject = new JetResolutionObject(m_path);
 
     std::cout << "Opening PoolDBOutputService" << std::endl;
 
@@ -50,11 +55,12 @@ void JetResolutionDBWriter::beginJob()
     if (s.isAvailable()) 
     {
 
-        std::cout << "Setting up payload tag " << algo << std::endl;
-        cond::Time_t sinceTime =  s->isNewTagRequest(algo) ? s->beginOfTime() : s->currentTime();
-        s->writeOne<JetResolutionObject>(jerObject, sinceTime, algo);
+        std::cout << "Setting up payload tag " << m_tag << std::endl;
+        cond::Time_t sinceTime =  s->isNewTagRequest(m_tag) ? s->beginOfTime() : s->currentTime();
+        s->writeOne<JetResolutionObject>(jerObject, sinceTime, m_tag);
+
+        std::cout << "Object saved into the database with the tag: " << m_tag << std::endl;
     }
-    std::cout << "Wrote in CondDB payload label: " << algo << std::endl;
 }
 
 DEFINE_FWK_MODULE(JetResolutionDBWriter);
