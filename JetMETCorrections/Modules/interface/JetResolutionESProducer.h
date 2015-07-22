@@ -13,36 +13,29 @@
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Framework/interface/ESHandle.h"
 
-#include "CondFormats/DataRecord/interface/JERRcd.h"
+#include "CondFormats/DataRecord/interface/JetResolutionRcd.h"
+#include "CondFormats/DataRecord/interface/JetResolutionScaleFactorRcd.h"
 #include "CondFormats/JetMETObjects/interface/JetResolutionObject.h"
 
 class JetResolutionESProducer : public edm::ESProducer
 {
     private:
-        edm::ParameterSet mParameterSet;
-        std::string m_era;
-        std::string m_algo;
-        std::string m_tag;
+        std::string m_label;
 
     public:
-        JetResolutionESProducer(edm::ParameterSet const& fConfig) : mParameterSet(fConfig) 
+        JetResolutionESProducer(edm::ParameterSet const& fConfig) 
         {
-            std::string label = fConfig.getParameter<std::string>("@module_label"); 
-            m_era             = fConfig.getParameter<std::string>("era");
-            m_algo            = fConfig.getParameter<std::string>("algorithm");
-
-            m_tag = m_era + "_" + m_algo;
-
-            setWhatProduced(this, m_tag);
+            m_label = fConfig.getParameter<std::string>("label");
+            setWhatProduced(this, m_label);
         }
 
         ~JetResolutionESProducer() {}
 
-        boost::shared_ptr<JME::JetResolution> produce(JERRcd const& iRecord) {
+        boost::shared_ptr<JME::JetResolution> produce(JetResolutionRcd const& iRecord) {
             
             // Get object from record
             edm::ESHandle<JetResolutionObject> jerObjectHandle;
-            iRecord.get(m_tag, jerObjectHandle);
+            iRecord.get(m_label, jerObjectHandle);
 
             // Convert this object to a JetResolution object
             JetResolutionObject const& jerObject = (*jerObjectHandle);
@@ -53,30 +46,22 @@ class JetResolutionESProducer : public edm::ESProducer
 class JetResolutionScaleFactorESProducer : public edm::ESProducer
 {
     private:
-        edm::ParameterSet mParameterSet;
-        std::string m_era;
-        std::string m_algo;
-        std::string m_tag;
+        std::string m_label;
 
     public:
-        JetResolutionScaleFactorESProducer(edm::ParameterSet const& fConfig) : mParameterSet(fConfig) 
+        JetResolutionScaleFactorESProducer(edm::ParameterSet const& fConfig)
         {
-            std::string label = fConfig.getParameter<std::string>("@module_label"); 
-            m_era             = fConfig.getParameter<std::string>("era");
-            m_algo            = fConfig.getParameter<std::string>("algorithm");
-
-            m_tag = m_era + "_" + m_algo;
-
-            setWhatProduced(this, m_tag);
+            m_label = fConfig.getParameter<std::string>("label");
+            setWhatProduced(this, m_label);
         }
 
         ~JetResolutionScaleFactorESProducer() {}
 
-        boost::shared_ptr<JME::JetResolutionScaleFactor> produce(JERRcd const& iRecord) {
+        boost::shared_ptr<JME::JetResolutionScaleFactor> produce(JetResolutionScaleFactorRcd const& iRecord) {
             
             // Get object from record
             edm::ESHandle<JetResolutionObject> jerObjectHandle;
-            iRecord.get(m_tag, jerObjectHandle);
+            iRecord.get(m_label, jerObjectHandle);
 
             // Convert this object to a JetResolution object
             JetResolutionObject const& jerObject = (*jerObjectHandle);

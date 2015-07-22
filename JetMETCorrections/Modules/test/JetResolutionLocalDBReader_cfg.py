@@ -16,16 +16,16 @@ process.PoolDBESSource = cms.ESSource("PoolDBESSource",
         toGet = cms.VPSet(
             # Resolution
             cms.PSet(
-                record = cms.string('JERRcd'),
+                record = cms.string('JetResolutionRcd'),
                 tag    = cms.string('JetResolutionObject_Summer15_V5_MC_JER_AK4PFchs'),
-                label  = cms.untracked.string('Summer15_V5_MC_JER_AK4PFchs')
+                label  = cms.untracked.string('AK4PFchs')
                 ),
 
             # Scale factors
             cms.PSet(
-                record = cms.string('JERRcd'),
+                record = cms.string('JetResolutionScaleFactorRcd'),
                 tag    = cms.string('JetResolutionObject_Summer15_V5_MC_JER_SF_AK4PFchs'),
-                label  = cms.untracked.string('Summer15_V5_MC_JER_SF_AK4PFchs')
+                label  = cms.untracked.string('AK4PFchs')
                 ),
             ),
         connect = cms.string('sqlite:Summer15_V5_MC_JER.db')
@@ -34,14 +34,14 @@ process.PoolDBESSource = cms.ESSource("PoolDBESSource",
 
 process.demo1 = cms.EDAnalyzer('JetResolutionDBReader', 
         era = cms.untracked.string('Summer15_V5_MC_JER'),
-        algorithm = cms.untracked.string('AK4PFchs'),
+        label = cms.untracked.string('AK4PFchs'),
         dump = cms.untracked.bool(True),
         saveFile = cms.untracked.bool(True)
         )
 
-process.demo2 = cms.EDAnalyzer('JetResolutionDBReader', 
+process.demo2 = cms.EDAnalyzer('JetResolutionScaleFactorDBReader', 
         era = cms.untracked.string('Summer15_V5_MC_JER_SF'),
-        algorithm = cms.untracked.string('AK4PFchs'),
+        label = cms.untracked.string('AK4PFchs'),
         dump = cms.untracked.bool(True),
         saveFile = cms.untracked.bool(True)
         )

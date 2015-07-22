@@ -11,25 +11,23 @@ process.PoolDBOutputService = cms.Service('PoolDBOutputService',
             cms.PSet(
                 record = cms.string('Summer15_V5_MC_JER_AK4PFchs'),
                 tag    = cms.string('JetResolutionObject_Summer15_V5_MC_JER_AK4PFchs'),
-                label  = cms.string('Summer15_V5_MC_JER_AK4PFchs')
+                label  = cms.string('AK4PFchs')
                 ),
             cms.PSet(
                 record = cms.string('Summer15_V5_MC_JER_SF_AK4PFchs'),
                 tag    = cms.string('JetResolutionObject_Summer15_V5_MC_JER_SF_AK4PFchs'),
-                label  = cms.string('Summer15_V5_MC_JER_SF_AK4PFchs')
+                label  = cms.string('AK4PFchs')
                 ),
             )
         )
 
 process.dbWriterAK4PF_JER = cms.EDAnalyzer('JetResolutionDBWriter',
-        era = cms.untracked.string('Summer15_V5_MC_JER'),
-        algorithm = cms.untracked.string('AK4PFchs'),
+        record = cms.untracked.string('Summer15_V5_MC_JER_AK4PFchs'),
         file = cms.untracked.FileInPath('CondFormats/JetMETObjects/data/Summer15_V5_MC_JER_AK4PFchs.txt')
         )
 
 process.dbWriterAK4PF_JER_SF = cms.EDAnalyzer('JetResolutionDBWriter',
-        era = cms.untracked.string('Summer15_V5_MC_JER_SF'),
-        algorithm = cms.untracked.string('AK4PFchs'),
+        record = cms.untracked.string('Summer15_V5_MC_JER_SF_AK4PFchs'),
         file = cms.untracked.FileInPath('CondFormats/JetMETObjects/data/Summer15_V5_MC_JER_SF_AK4PFchs.txt')
         )
 

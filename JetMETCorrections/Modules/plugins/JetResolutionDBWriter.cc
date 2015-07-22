@@ -24,20 +24,15 @@ class JetResolutionDBWriter : public edm::EDAnalyzer
   ~JetResolutionDBWriter() {}
 
  private:
-  std::string m_algo;
-  std::string m_era;
-  std::string m_tag;
+  std::string m_record;
   std::string m_path;
 };
 
 // Constructor
 JetResolutionDBWriter::JetResolutionDBWriter(const edm::ParameterSet& pSet)
 {
-  m_era  = pSet.getUntrackedParameter<std::string>("era");
-  m_algo = pSet.getUntrackedParameter<std::string>("algorithm");
-  m_path = pSet.getUntrackedParameter<edm::FileInPath>("file").fullPath();
-
-  m_tag = m_era + "_" + m_algo;
+  m_record = pSet.getUntrackedParameter<std::string>("record");
+  m_path  = pSet.getUntrackedParameter<edm::FileInPath>("file").fullPath();
 }
 
 // Begin Job
@@ -55,11 +50,11 @@ void JetResolutionDBWriter::beginJob()
     if (s.isAvailable()) 
     {
 
-        std::cout << "Setting up payload tag " << m_tag << std::endl;
-        cond::Time_t sinceTime =  s->isNewTagRequest(m_tag) ? s->beginOfTime() : s->currentTime();
-        s->writeOne<JetResolutionObject>(jerObject, sinceTime, m_tag);
+        std::cout << "Setting up payload record " << m_record << std::endl;
+        cond::Time_t sinceTime =  s->isNewTagRequest(m_record) ? s->beginOfTime() : s->currentTime();
+        s->writeOne<JetResolutionObject>(jerObject, sinceTime, m_record);
 
-        std::cout << "Object saved into the database with the tag: " << m_tag << std::endl;
+        std::cout << "Object saved into the database with the record: " << m_record << std::endl;
     }
 }
 
