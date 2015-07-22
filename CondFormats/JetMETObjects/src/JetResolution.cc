@@ -33,6 +33,12 @@ JetResolutionObject::Definition::Definition(const std::string& definition) {
 
     m_formula_str = tokens[n_bins + n_variables + 2];
 
+    std::string formula_str_lower = m_formula_str;
+    std::transform(formula_str_lower.begin(), formula_str_lower.end(), formula_str_lower.begin(), ::tolower);
+
+    if (formula_str_lower == "none")
+        m_formula_str = "";
+
     init();
 }
 
@@ -158,7 +164,7 @@ void JetResolutionObject::saveToFile(const std::string& file) const {
     for (auto& var: m_definition.getVariables())
         fout << "    " << var;
 
-    fout << "    " << m_definition.getFormulaString() << "    Resolution}" << std::endl;
+    fout << "    " << (m_definition.getFormulaString().empty() ? "None" : m_definition.getFormulaString()) << "    Resolution}" << std::endl;
 
     // Records
     for (auto& record: m_records) {

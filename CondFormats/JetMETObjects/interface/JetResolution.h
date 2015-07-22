@@ -200,6 +200,11 @@ class JetResolutionScaleFactor {
             m_object->dump();
         }
 
+        // Advanced usage
+        JetResolutionObject* getResolutionObject() {
+            return m_object.get();
+        }
+
     private:
         std::shared_ptr<JetResolutionObject> m_object;
 };
