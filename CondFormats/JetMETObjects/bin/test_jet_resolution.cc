@@ -6,12 +6,24 @@ int main(int argc, char **argv) {
 
     jer.dump();
 
-    std::vector<float> etas = {-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5};
+    const std::vector<JetResolutionObject::Record> records = jer.getResolutionObject()->getRecords();
+
+    std::vector<float> etas;
+    for (const auto& record: records) {
+        if (etas.empty()) {
+            etas.push_back(record.getBinsRange()[0].min);
+            etas.push_back(record.getBinsRange()[0].max);
+        } else {
+            etas.push_back(record.getBinsRange()[0].max);
+        }
+    }
+
     std::vector<float> pts = {1, 10, 50, 100, 150, 200, 300, 400, 500, 750, 1000, 2000, 10000};
 
-    for (float eta: etas) {
+    for (size_t i = 0; i < etas.size() - 1; i++) {
+        float mean_eta = (etas[i] + etas[i + 1]) / 2;
         for (float pt: pts) {
-            std::cout << "eta: " << eta << "  pt: " << pt << "  rho: 20 -> jer = " << jer.getResolution(pt, eta, 20) << std::endl;
+            std::cout << "eta: " << mean_eta << "  pt: " << pt << "  rho: 20 -> jer = " << jer.getResolution(pt, mean_eta, 20) << std::endl;
         }
     }
 
