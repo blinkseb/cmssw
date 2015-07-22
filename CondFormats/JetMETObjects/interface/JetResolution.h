@@ -148,6 +148,10 @@ class JetResolutionObject {
         const Record* getRecord(const std::vector<float>& bins);
         float evaluateFormula(const Record& record, const std::vector<float>& variables);
 
+        const std::vector<Record>& getRecords() {
+            return m_records;
+        }
+
     private:
 
 
@@ -171,6 +175,11 @@ class JetResolution {
 
         void dump() {
             m_object->dump();
+        }
+
+        // Advanced usage
+        JetResolutionObject* getResolutionObject() {
+            return m_object.get();
         }
 
     private:
