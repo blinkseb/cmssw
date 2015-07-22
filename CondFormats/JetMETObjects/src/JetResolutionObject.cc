@@ -188,7 +188,7 @@ void JetResolutionObject::saveToFile(const std::string& file) const {
 
 const JetResolutionObject::Record* JetResolutionObject::getRecord(const std::vector<float>& bins) {
     // Find record for bins
-    if (m_definition.nBins() != bins.size())
+    if (bins.size() < m_definition.nBins())
         return nullptr;
 
     // Iterate over all records, and find the one for which all bins are valid
@@ -221,16 +221,17 @@ float JetResolutionObject::evaluateFormula(const JetResolutionObject::Record& re
     if (! formula)
         return 1;
 
+    if (variables.size() < m_definition.nVariables())
+        return 1;
+
     const std::vector<float>& parameters = record.getParametersValues();
     for (size_t index = 0; index < parameters.size(); index++) {
         formula->SetParameter(index, parameters[index]);
     }
 
     double variables_[4] = {0};
-    size_t index = 0;
-    for (float variable: variables) {
-        variables_[index] = clip(variable, record.getVariablesRange()[index].min, record.getVariablesRange()[index].max);
-        index++;
+    for (size_t index = 0; index < m_definition.nVariables(); index++) {
+        variables_[index] = clip(variables[index], record.getVariablesRange()[index].min, record.getVariablesRange()[index].max);
     }
 
     return formula->EvalPar(variables_);
@@ -246,12 +247,12 @@ namespace JME {
         m_object = std::shared_ptr<JetResolutionObject>(new JetResolutionObject(object));
     }
 
-    float JetResolution::getResolution(float pt, float eta, float rho) {
+    float JetResolution::getResolution(float pt, float eta) {
         const JetResolutionObject::Record* record = m_object->getRecord({eta});
         if (! record)
             return 1;
 
-        return m_object->evaluateFormula(*record, {pt, rho});
+        return m_object->evaluateFormula(*record, {pt});
     }
 
     JetResolutionScaleFactor::JetResolutionScaleFactor(const std::string& filename) {

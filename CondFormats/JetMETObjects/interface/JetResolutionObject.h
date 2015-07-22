@@ -173,7 +173,7 @@ namespace JME {
                 // Empty
             }
 
-            float getResolution(float pt, float eta, float rho);
+            float getResolution(float pt, float eta);
 
             void dump() {
                 m_object->dump();
