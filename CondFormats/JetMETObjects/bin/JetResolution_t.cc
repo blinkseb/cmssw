@@ -7,7 +7,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#include "CondFormats/JetMETObjects/interface/JetResolution_old.h"
+#include "CondFormats/JetMETObjects/interface/JetResolution.h"
 
 
 #include <TROOT.h>
