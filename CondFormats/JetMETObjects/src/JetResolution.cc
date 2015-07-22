@@ -236,40 +236,44 @@ float JetResolutionObject::evaluateFormula(const JetResolutionObject::Record& re
     return formula->EvalPar(variables_);
 }
 
-JetResolution::JetResolution(const std::string& filename) {
-    m_object = std::shared_ptr<JetResolutionObject>(new JetResolutionObject(filename));
-}
+namespace JME {
 
-JetResolution::JetResolution(const JetResolutionObject& object) {
-    m_object = std::shared_ptr<JetResolutionObject>(new JetResolutionObject(object));
-}
+    JetResolution::JetResolution(const std::string& filename) {
+        m_object = std::shared_ptr<JetResolutionObject>(new JetResolutionObject(filename));
+    }
 
-float JetResolution::getResolution(float pt, float eta, float rho) {
-    const JetResolutionObject::Record* record = m_object->getRecord({eta});
-    if (! record)
-        return 1;
+    JetResolution::JetResolution(const JetResolutionObject& object) {
+        m_object = std::shared_ptr<JetResolutionObject>(new JetResolutionObject(object));
+    }
 
-    return m_object->evaluateFormula(*record, {pt, rho});
-}
+    float JetResolution::getResolution(float pt, float eta, float rho) {
+        const JetResolutionObject::Record* record = m_object->getRecord({eta});
+        if (! record)
+            return 1;
 
-JetResolutionScaleFactor::JetResolutionScaleFactor(const std::string& filename) {
-    m_object = std::shared_ptr<JetResolutionObject>(new JetResolutionObject(filename));
-}
+        return m_object->evaluateFormula(*record, {pt, rho});
+    }
 
-JetResolutionScaleFactor::JetResolutionScaleFactor(const JetResolutionObject& object) {
-    m_object = std::shared_ptr<JetResolutionObject>(new JetResolutionObject(object));
-}
+    JetResolutionScaleFactor::JetResolutionScaleFactor(const std::string& filename) {
+        m_object = std::shared_ptr<JetResolutionObject>(new JetResolutionObject(filename));
+    }
 
-float JetResolutionScaleFactor::getScaleFactor(float eta, Variation variation/* = Variation::NOMINAL*/) {
-    const JetResolutionObject::Record* record = m_object->getRecord({static_cast<float>(fabs(eta))});
-    if (! record)
-        return 1;
+    JetResolutionScaleFactor::JetResolutionScaleFactor(const JetResolutionObject& object) {
+        m_object = std::shared_ptr<JetResolutionObject>(new JetResolutionObject(object));
+    }
 
-    const std::vector<float>& parameters = record->getParametersValues();
-    return parameters[static_cast<size_t>(variation)];
+    float JetResolutionScaleFactor::getScaleFactor(float eta, Variation variation/* = Variation::NOMINAL*/) {
+        const JetResolutionObject::Record* record = m_object->getRecord({static_cast<float>(fabs(eta))});
+        if (! record)
+            return 1;
+
+        const std::vector<float>& parameters = record->getParametersValues();
+        return parameters[static_cast<size_t>(variation)];
+    }
+
 }
 
 #include "FWCore/Utilities/interface/typelookup.h"
 TYPELOOKUP_DATA_REG(JetResolutionObject);
-TYPELOOKUP_DATA_REG(JetResolution);
-TYPELOOKUP_DATA_REG(JetResolutionScaleFactor);
+TYPELOOKUP_DATA_REG(JME::JetResolution);
+TYPELOOKUP_DATA_REG(JME::JetResolutionScaleFactor);

@@ -163,50 +163,54 @@ class JetResolutionObject {
     COND_SERIALIZABLE;
 };
 
-class JetResolution {
-    public:
-        JetResolution(const std::string& filename);
-        JetResolution(const JetResolutionObject& object);
-        JetResolution() {
-            // Empty
-        }
+namespace JME {
 
-        float getResolution(float pt, float eta, float rho);
+    class JetResolution {
+        public:
+            JetResolution(const std::string& filename);
+            JetResolution(const JetResolutionObject& object);
+            JetResolution() {
+                // Empty
+            }
 
-        void dump() {
-            m_object->dump();
-        }
+            float getResolution(float pt, float eta, float rho);
 
-        // Advanced usage
-        JetResolutionObject* getResolutionObject() {
-            return m_object.get();
-        }
+            void dump() {
+                m_object->dump();
+            }
 
-    private:
-        std::shared_ptr<JetResolutionObject> m_object;
-};
+            // Advanced usage
+            JetResolutionObject* getResolutionObject() {
+                return m_object.get();
+            }
 
-class JetResolutionScaleFactor {
-    public:
-        JetResolutionScaleFactor(const std::string& filename);
-        JetResolutionScaleFactor(const JetResolutionObject& object);
-        JetResolutionScaleFactor() {
-            // Empty
-        }
+        private:
+            std::shared_ptr<JetResolutionObject> m_object;
+    };
 
-        float getScaleFactor(float eta, Variation variation = Variation::NOMINAL);
+    class JetResolutionScaleFactor {
+        public:
+            JetResolutionScaleFactor(const std::string& filename);
+            JetResolutionScaleFactor(const JetResolutionObject& object);
+            JetResolutionScaleFactor() {
+                // Empty
+            }
 
-        void dump() {
-            m_object->dump();
-        }
+            float getScaleFactor(float eta, Variation variation = Variation::NOMINAL);
 
-        // Advanced usage
-        JetResolutionObject* getResolutionObject() {
-            return m_object.get();
-        }
+            void dump() {
+                m_object->dump();
+            }
 
-    private:
-        std::shared_ptr<JetResolutionObject> m_object;
+            // Advanced usage
+            JetResolutionObject* getResolutionObject() {
+                return m_object.get();
+            }
+
+        private:
+            std::shared_ptr<JetResolutionObject> m_object;
+    };
+
 };
 
 #endif

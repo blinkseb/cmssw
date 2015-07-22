@@ -38,7 +38,7 @@ double fnc_gaussalpha1alpha2(double*xx,double*pp);
 ////////////////////////////////////////////////////////////////////////////////
 
 //______________________________________________________________________________
-JetResolutionOld::JetResolutionOld()
+JetResolution::JetResolution()
   : resolutionFnc_(0)
 {
   resolutionFnc_ = new TF1();
@@ -46,7 +46,7 @@ JetResolutionOld::JetResolutionOld()
 
 
 //______________________________________________________________________________
-JetResolutionOld::JetResolutionOld(const string& fileName,bool doGaussian)
+JetResolution::JetResolution(const string& fileName,bool doGaussian)
   : resolutionFnc_(0)
 {
   initialize(fileName,doGaussian);
@@ -54,7 +54,7 @@ JetResolutionOld::JetResolutionOld(const string& fileName,bool doGaussian)
 
 
 //______________________________________________________________________________
-JetResolutionOld::~JetResolutionOld()
+JetResolution::~JetResolution()
 {
   delete resolutionFnc_;
   for (unsigned i=0;i<parameterFncs_.size();i++) delete parameterFncs_[i];
@@ -67,7 +67,7 @@ JetResolutionOld::~JetResolutionOld()
 ////////////////////////////////////////////////////////////////////////////////
 
 //______________________________________________________________________________
-void JetResolutionOld::initialize(const string& fileName,bool doGaussian)
+void JetResolution::initialize(const string& fileName,bool doGaussian)
 {
   size_t pos;
 
@@ -112,7 +112,7 @@ void JetResolutionOld::initialize(const string& fileName,bool doGaussian)
 
 
 //______________________________________________________________________________
-TF1* JetResolutionOld::resolutionEtaPt(float eta, float pt) const
+TF1* JetResolution::resolutionEtaPt(float eta, float pt) const
 {
   vector<float> x; x.push_back(eta);
   vector<float> y; y.push_back(pt);
@@ -121,7 +121,7 @@ TF1* JetResolutionOld::resolutionEtaPt(float eta, float pt) const
 
 
 //______________________________________________________________________________
-TF1* JetResolutionOld::resolution(const vector<float>& x,
+TF1* JetResolution::resolution(const vector<float>& x,
 			       const vector<float>& y) const
 {
   unsigned N(y.size());
@@ -143,7 +143,7 @@ TF1* JetResolutionOld::resolution(const vector<float>& x,
 
 
 //______________________________________________________________________________
-TF1* JetResolutionOld::parameterEta(const string& parameterName, float eta)
+TF1* JetResolution::parameterEta(const string& parameterName, float eta)
 {
   vector<float> x; x.push_back(eta);
   return parameter(parameterName,x);
@@ -151,7 +151,7 @@ TF1* JetResolutionOld::parameterEta(const string& parameterName, float eta)
 
 
 //______________________________________________________________________________
-TF1* JetResolutionOld::parameter(const string& parameterName,const vector<float>& x)
+TF1* JetResolution::parameter(const string& parameterName,const vector<float>& x)
 {
   TF1* result(0);
   for (unsigned i=0;i<parameterFncs_.size()&&result==0;i++) {
@@ -171,7 +171,7 @@ TF1* JetResolutionOld::parameter(const string& parameterName,const vector<float>
     }
   }
 
-  if (0==result) cerr<<"JetResolutionOld::parameter() ERROR: no parameter "
+  if (0==result) cerr<<"JetResolution::parameter() ERROR: no parameter "
 		     <<parameterName<<" found."<<endl;
 
   return result;
@@ -179,7 +179,7 @@ TF1* JetResolutionOld::parameter(const string& parameterName,const vector<float>
 
 
 //______________________________________________________________________________
-double JetResolutionOld::parameterEtaEval(const std::string& parameterName, float eta, float pt)
+double JetResolution::parameterEtaEval(const std::string& parameterName, float eta, float pt)
 {
   TF1* func(0);
   JetCorrectorParameters* params(0);
@@ -193,14 +193,14 @@ double JetResolutionOld::parameterEtaEval(const std::string& parameterName, floa
     }
 
   if (!func)
-    edm::LogError("ParameterNotFound") << "JetResolutionOld::parameterEtaEval(): no parameter \""
+    edm::LogError("ParameterNotFound") << "JetResolution::parameterEtaEval(): no parameter \""
 				  << parameterName << "\" found" << std::endl;
 
   std::vector<float> etas; etas.push_back(eta);
   int bin = params->binIndex(etas);
 
   if ( !(0 <= bin && bin < (int)params->size() ) )
-    edm::LogError("ParameterNotFound") << "JetResolutionOld::parameterEtaEval(): bin out of range: "
+    edm::LogError("ParameterNotFound") << "JetResolution::parameterEtaEval(): bin out of range: "
 				       << bin << std::endl;
 
   const std::vector<float>& pars = params->record(bin).parameters();

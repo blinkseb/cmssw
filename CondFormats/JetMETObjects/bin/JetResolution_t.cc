@@ -79,9 +79,9 @@ int main(int argc,char**argv)
   cout<<phiFileName<<endl;
   cout<<endl;
 
-  JetResolutionOld ptResol(ptFileName,doGaussian);
-  JetResolutionOld etaResol(etaFileName,doGaussian);
-  JetResolutionOld phiResol(phiFileName,doGaussian);
+  JetResolution ptResol(ptFileName,doGaussian);
+  JetResolution etaResol(etaFileName,doGaussian);
+  JetResolution phiResol(phiFileName,doGaussian);
   
 
   // SIMPLE TEST

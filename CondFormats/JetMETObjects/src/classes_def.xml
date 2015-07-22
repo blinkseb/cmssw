@@ -41,10 +41,10 @@
   <class name="JetResolutionObject::Range"/>
   <class name="std::vector<JetResolutionObject::Record>"/>
   <class name="std::vector<JetResolutionObject::Range>"/>
-  <class name="JetResolution">
+  <class name="JME::JetResolution">
       <field name="m_object" transient="true"/>
   </class>
-  <class name="JetResolutionScaleFactor">
+  <class name="JME::JetResolutionScaleFactor">
       <field name="m_object" transient="true"/>
   </class>
 

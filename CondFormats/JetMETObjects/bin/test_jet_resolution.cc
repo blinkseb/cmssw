@@ -2,7 +2,7 @@
 
 int main(int argc, char **argv) {
 
-    JetResolution jer(argv[1]);
+    JME::JetResolution jer(argv[1]);
 
     jer.dump();
 

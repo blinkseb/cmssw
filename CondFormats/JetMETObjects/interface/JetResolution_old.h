@@ -10,15 +10,15 @@
 class JetCorrectorParameters;
 
 
-class JetResolutionOld
+class JetResolution
 {
   //
   // construction / destruction
   //
 public:
-  JetResolutionOld();
-  JetResolutionOld(const std::string& fileName,bool doGaussian=false);
-  virtual ~JetResolutionOld();
+  JetResolution();
+  JetResolution(const std::string& fileName,bool doGaussian=false);
+  virtual ~JetResolution();
   
 
   double parameterEtaEval(const std::string& parameterName,float eta, float pt);

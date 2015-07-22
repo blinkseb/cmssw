@@ -26,5 +26,5 @@ JetResolutionObject::Record jerrecord;
 JetResolutionObject::Range jerrange;
 std::vector<JetResolutionObject::Record> jerrecordvec;
 std::vector<JetResolutionObject::Range> jerrangevec;
-JetResolution jer;
-JetResolutionScaleFactor jer_sf;
+JME::JetResolution jer;
+JME::JetResolutionScaleFactor jer_sf;

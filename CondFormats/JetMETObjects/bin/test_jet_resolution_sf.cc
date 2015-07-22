@@ -2,7 +2,7 @@
 
 int main(int argc, char **argv) {
 
-    JetResolutionScaleFactor jer(argv[1]);
+    JME::JetResolutionScaleFactor jer(argv[1]);
     jer.dump();
 
     const std::vector<JetResolutionObject::Record> records = jer.getResolutionObject()->getRecords();
