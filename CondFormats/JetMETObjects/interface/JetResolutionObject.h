@@ -7,6 +7,9 @@
 #include <string>
 #include <tuple>
 #include <memory>
+#include <initializer_list>
+
+#include <boost/optional.hpp>
 
 #include <TFormula.h>
 
@@ -25,145 +28,211 @@ T clip(const T& n, const T& lower, const T& upper) {
     return std::max(lower, std::min(n, upper));
 }
 
-class JetResolutionObject {
+namespace JME {
+    template <typename T, typename U>
+    struct bimap {
+        typedef std::map<T, U> left_type;
+        typedef std::map<U, T> right_type;
 
-    public:
+        left_type left;
+        right_type right;
+        
+        bimap(std::initializer_list<typename left_type::value_type> l) {
+            for (auto& v: l) {
+                left.insert(v);
+                right.insert(typename right_type::value_type(v.second, v.first));
+            }
+        }
 
-    struct Range {
-        float min;
-        float max;
-
-        Range() {
+        bimap() {
             // Empty
         }
 
-        Range(float min, float max) {
-            this->min = min;
-            this->max = max;
+        bimap(bimap&& rhs) {
+            left = std::move(rhs.left);
+            right = std::move(rhs.right);
         }
-
-        bool is_inside(float value) const {
-            return (value >= min) && (value <= max);
-        }
-
-        COND_SERIALIZABLE;
     };
 
-    class Definition {
-    
+    enum class Binning {
+        JetPt,
+        JetEta,
+        JetAbsEta,
+        JetE,
+        JetArea,
+        Mu,
+        Rho,
+        NPV,
+    };
+
+
+    class JetParameters {
         public:
-            Definition() {
-                // Empty
-            }
+            JetParameters& setJetPt(float pt);
+            JetParameters& setJetEta(float eta);
+            JetParameters& setJetE(float e);
+            JetParameters& setJetArea(float area);
+            JetParameters& setMu(float mu);
+            JetParameters& setRho(float rho);
+            JetParameters& setNPV(float npv);
 
-            Definition(const std::string& definition);
+            static const bimap<Binning, std::string> binning_to_string;
 
-            size_t nVariables() const {
-                return m_variables.size();
-            }
-
-            const std::vector<std::string>& getBins() const {
-                return m_bins;
-            }
-
-            const std::vector<std::string>& getVariables() const {
-                return m_variables;
-            }
-
-            size_t nBins() const {
-                return m_bins.size();
-            }
-
-            std::string getBinName(size_t bin) const {
-                return m_bins[bin];
-            }
-
-            std::string getVariableName(size_t variable) const {
-                return m_variables[variable];
-            }
-
-            std::string getFormulaString() const {
-                return m_formula_str;
-            }
-
-            TFormula* getFormula() const {
-                return m_formula.get();
-            }
-
-            void init();
+            std::vector<float> createVector(const std::vector<Binning>& binning) const;
 
         private:
-            std::vector<std::string> m_bins;
-            std::vector<std::string> m_variables;
-            std::string m_formula_str;
-            std::shared_ptr<TFormula> m_formula COND_TRANSIENT;
-
-        COND_SERIALIZABLE;
+            std::map<Binning, float> m_values;
     };
 
-    class Record {
+
+    class JetResolutionObject {
+
         public:
-            Record() {
-                // Empty
-            }
 
-            Record(const std::string& record, const Definition& def);
+            struct Range {
+                float min;
+                float max;
 
-            const std::vector<Range>& getBinsRange() const {
-                return m_bins_range;
-            }
+                Range() {
+                    // Empty
+                }
 
-            const std::vector<Range>& getVariablesRange() const {
-                return m_variables_range;
-            }
+                Range(float min, float max) {
+                    this->min = min;
+                    this->max = max;
+                }
 
-            const std::vector<float>& getParametersValues() const {
-                return m_parameters_values;
-            }
+                bool is_inside(float value) const {
+                    return (value >= min) && (value <= max);
+                }
 
-            size_t nVariables() const {
-                return m_variables_range.size();
-            }
+                COND_SERIALIZABLE;
+            };
 
-            size_t nParameters() const {
-                return m_parameters_values.size();    
+            class Definition {
+
+                public:
+                    Definition() {
+                        // Empty
+                    }
+
+                    Definition(const std::string& definition);
+
+                    const std::vector<std::string>& getBinsName() const {
+                        return m_bins_name;
+                    }
+
+                    const std::vector<Binning>& getBins() const {
+                        return m_bins;
+                    }
+
+                    std::string getBinName(size_t bin) const {
+                        return m_bins_name[bin];
+                    }
+
+                    size_t nBins() const {
+                        return m_bins_name.size();
+                    }
+
+                    const std::vector<std::string>& getVariablesName() const {
+                        return m_variables_name;
+                    }
+
+                    const std::vector<Binning>& getVariables() const {
+                        return m_variables;
+                    }
+
+                    std::string getVariableName(size_t variable) const {
+                        return m_variables_name[variable];
+                    }
+
+                    size_t nVariables() const {
+                        return m_variables.size();
+                    }
+
+                    std::string getFormulaString() const {
+                        return m_formula_str;
+                    }
+
+                    TFormula* getFormula() const {
+                        return m_formula.get();
+                    }
+
+                    void init();
+
+                private:
+                    std::vector<std::string> m_bins_name;
+                    std::vector<std::string> m_variables_name;
+                    std::string m_formula_str;
+
+                    std::shared_ptr<TFormula> m_formula COND_TRANSIENT;
+
+                    std::vector<Binning> m_bins COND_TRANSIENT;
+                    std::vector<Binning> m_variables COND_TRANSIENT;
+
+                    COND_SERIALIZABLE;
+            };
+
+            class Record {
+                public:
+                    Record() {
+                        // Empty
+                    }
+
+                    Record(const std::string& record, const Definition& def);
+
+                    const std::vector<Range>& getBinsRange() const {
+                        return m_bins_range;
+                    }
+
+                    const std::vector<Range>& getVariablesRange() const {
+                        return m_variables_range;
+                    }
+
+                    const std::vector<float>& getParametersValues() const {
+                        return m_parameters_values;
+                    }
+
+                    size_t nVariables() const {
+                        return m_variables_range.size();
+                    }
+
+                    size_t nParameters() const {
+                        return m_parameters_values.size();    
+                    }
+
+                private:
+                    std::vector<Range> m_bins_range;
+                    std::vector<Range> m_variables_range;
+                    std::vector<float> m_parameters_values;
+
+                    COND_SERIALIZABLE;
+            };
+
+        public:
+            JetResolutionObject(const std::string& filename);
+            JetResolutionObject(const JetResolutionObject& filename);
+            JetResolutionObject();
+
+            void dump() const;
+            void saveToFile(const std::string& file) const;
+
+            const Record* getRecord(const JetParameters& bins) const;
+            float evaluateFormula(const Record& record, const JetParameters& variables) const;
+
+            const std::vector<Record>& getRecords() const {
+                return m_records;
             }
 
         private:
-            std::vector<Range> m_bins_range;
-            std::vector<Range> m_variables_range;
-            std::vector<float> m_parameters_values;
+            Definition m_definition;
+            std::vector<Record> m_records;
 
-        COND_SERIALIZABLE;
+            bool m_valid = false;
+
+            COND_SERIALIZABLE;
     };
 
-    public:
-        JetResolutionObject(const std::string& filename);
-        JetResolutionObject(const JetResolutionObject& filename);
-        JetResolutionObject();
-
-        void dump() const;
-        void saveToFile(const std::string& file) const;
-
-        const Record* getRecord(const std::vector<float>& bins) const;
-        float evaluateFormula(const Record& record, const std::vector<float>& variables) const;
-
-        const std::vector<Record>& getRecords() const {
-            return m_records;
-        }
-
-    private:
-
-
-        Definition m_definition;
-        std::vector<Record> m_records;
-
-        bool m_valid = false;
-
-    COND_SERIALIZABLE;
-};
-
-namespace JME {
 
     class JetResolution {
         public:
@@ -175,7 +244,7 @@ namespace JME {
 
             static const JetResolution get(const edm::EventSetup&, const std::string&);
 
-            float getResolution(float pt, float eta) const;
+            float getResolution(const JetParameters& parameters) const;
 
             void dump() const {
                 m_object->dump();
@@ -185,8 +254,6 @@ namespace JME {
             const JetResolutionObject* getResolutionObject() const {
                 return m_object.get();
             }
-
-
 
         private:
             std::shared_ptr<JetResolutionObject> m_object;
@@ -202,7 +269,7 @@ namespace JME {
 
             static const JetResolutionScaleFactor get(const edm::EventSetup&, const std::string&);
 
-            float getScaleFactor(float eta, Variation variation = Variation::NOMINAL) const;
+            float getScaleFactor(const JetParameters& parameters, Variation variation = Variation::NOMINAL) const;
 
             void dump() const {
                 m_object->dump();

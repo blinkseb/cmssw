@@ -74,7 +74,7 @@ JetResolutionDBReader::~JetResolutionDBReader()
 
 void JetResolutionDBReader::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
-    edm::ESHandle<JetResolutionObject> jerObjectHandle;
+    edm::ESHandle<JME::JetResolutionObject> jerObjectHandle;
     std::cout << "Inspecting JER payload for label: "<< m_label << std::endl;
 
     iSetup.get<JetResolutionRcd>().get(m_label, jerObjectHandle);
@@ -108,7 +108,7 @@ JetResolutionScaleFactorDBReader::JetResolutionScaleFactorDBReader(const edm::Pa
 
 void JetResolutionScaleFactorDBReader::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
-    edm::ESHandle<JetResolutionObject> jerObjectHandle;
+    edm::ESHandle<JME::JetResolutionObject> jerObjectHandle;
     std::cout << "Inspecting JER SF payload for label: "<< m_label << std::endl;
 
     iSetup.get<JetResolutionScaleFactorRcd>().get(m_label, jerObjectHandle);

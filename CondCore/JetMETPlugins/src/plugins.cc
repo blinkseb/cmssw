@@ -16,8 +16,8 @@
 REGISTER_PLUGIN(QGLikelihoodRcd, QGLikelihoodObject);
 REGISTER_PLUGIN(QGLikelihoodSystematicsRcd, QGLikelihoodSystematicsObject);
 
-REGISTER_PLUGIN(JetResolutionRcd, JetResolutionObject);
-REGISTER_PLUGIN(JetResolutionScaleFactorRcd, JetResolutionObject);
+REGISTER_PLUGIN(JetResolutionRcd, JME::JetResolutionObject);
+REGISTER_PLUGIN(JetResolutionScaleFactorRcd, JME::JetResolutionObject);
 
 REGISTER_PLUGIN(FFTBasicJetCorrectorParametersRcd, FFTJetCorrectorParameters);
 REGISTER_PLUGIN(FFTGenJetCorrectorParametersRcd, FFTJetCorrectorParameters);

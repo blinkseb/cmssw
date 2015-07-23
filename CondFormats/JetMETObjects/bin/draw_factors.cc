@@ -10,10 +10,10 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    JetResolutionObject factors(argv[1]);
+    JME::JetResolutionObject factors(argv[1]);
     factors.dump();
 
-    const std::vector<JetResolutionObject::Record> records = factors.getRecords();
+    const std::vector<JME::JetResolutionObject::Record> records = factors.getRecords();
 
     std::vector<float> etas;
     for (const auto& record: records) {
@@ -42,11 +42,11 @@ int main(int argc, char **argv) {
             if (mean_pt * cosh(mean_eta) > 7000)
                 continue;
 
-            const JetResolutionObject::Record* record = factors.getRecord({mean_eta});
+            const JME::JetResolutionObject::Record* record = factors.getRecord(JME::JetParameters().setJetEta(mean_eta));
             if (!record)
                 continue;
 
-            plot->SetBinContent(plot->FindBin(mean_pt, mean_eta), factors.evaluateFormula(*record, {mean_pt}));
+            plot->SetBinContent(plot->FindBin(mean_pt, mean_eta), factors.evaluateFormula(*record, JME::JetParameters().setJetPt(mean_pt)));
         }
 
     }

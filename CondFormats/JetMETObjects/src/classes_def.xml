@@ -35,12 +35,12 @@
 
   <class name="METCorrectorParameters"/>
 
-  <class name="JetResolutionObject"/>
-  <class name="JetResolutionObject::Definition"/>
-  <class name="JetResolutionObject::Record"/>
-  <class name="JetResolutionObject::Range"/>
-  <class name="std::vector<JetResolutionObject::Record>"/>
-  <class name="std::vector<JetResolutionObject::Range>"/>
+  <class name="JME::JetResolutionObject"/>
+  <class name="JME::JetResolutionObject::Definition"/>
+  <class name="JME::JetResolutionObject::Record"/>
+  <class name="JME::JetResolutionObject::Range"/>
+  <class name="std::vector<JME::JetResolutionObject::Record>"/>
+  <class name="std::vector<JME::JetResolutionObject::Range>"/>
   <class name="JME::JetResolution">
       <field name="m_object" transient="true"/>
   </class>

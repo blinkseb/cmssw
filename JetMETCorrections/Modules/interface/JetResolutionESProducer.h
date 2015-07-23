@@ -34,11 +34,11 @@ class JetResolutionESProducer : public edm::ESProducer
         boost::shared_ptr<JME::JetResolution> produce(JetResolutionRcd const& iRecord) {
             
             // Get object from record
-            edm::ESHandle<JetResolutionObject> jerObjectHandle;
+            edm::ESHandle<JME::JetResolutionObject> jerObjectHandle;
             iRecord.get(m_label, jerObjectHandle);
 
             // Convert this object to a JetResolution object
-            JetResolutionObject const& jerObject = (*jerObjectHandle);
+            JME::JetResolutionObject const& jerObject = (*jerObjectHandle);
             return boost::shared_ptr<JME::JetResolution>(new JME::JetResolution(jerObject));
         }
 };
@@ -60,11 +60,11 @@ class JetResolutionScaleFactorESProducer : public edm::ESProducer
         boost::shared_ptr<JME::JetResolutionScaleFactor> produce(JetResolutionScaleFactorRcd const& iRecord) {
             
             // Get object from record
-            edm::ESHandle<JetResolutionObject> jerObjectHandle;
+            edm::ESHandle<JME::JetResolutionObject> jerObjectHandle;
             iRecord.get(m_label, jerObjectHandle);
 
             // Convert this object to a JetResolution object
-            JetResolutionObject const& jerObject = (*jerObjectHandle);
+            JME::JetResolutionObject const& jerObject = (*jerObjectHandle);
             return boost::shared_ptr<JME::JetResolutionScaleFactor>(new JME::JetResolutionScaleFactor(jerObject));
         }
 };

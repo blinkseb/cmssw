@@ -41,7 +41,7 @@ void JetResolutionDBWriter::beginJob()
 
     std::cout << "Loading data from '" << m_path << "'" << std::endl;
 
-    JetResolutionObject* jerObject = new JetResolutionObject(m_path);
+    JME::JetResolutionObject* jerObject = new JME::JetResolutionObject(m_path);
 
     std::cout << "Opening PoolDBOutputService" << std::endl;
 
@@ -52,7 +52,7 @@ void JetResolutionDBWriter::beginJob()
 
         std::cout << "Setting up payload record " << m_record << std::endl;
         cond::Time_t sinceTime =  s->isNewTagRequest(m_record) ? s->beginOfTime() : s->currentTime();
-        s->writeOne<JetResolutionObject>(jerObject, sinceTime, m_record);
+        s->writeOne<JME::JetResolutionObject>(jerObject, sinceTime, m_record);
 
         std::cout << "Object saved into the database with the record: " << m_record << std::endl;
     }

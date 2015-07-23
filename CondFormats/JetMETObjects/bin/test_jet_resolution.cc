@@ -6,7 +6,7 @@ int main(int argc, char **argv) {
 
     jer.dump();
 
-    const std::vector<JetResolutionObject::Record> records = jer.getResolutionObject()->getRecords();
+    const std::vector<JME::JetResolutionObject::Record> records = jer.getResolutionObject()->getRecords();
 
     std::vector<float> etas;
     for (const auto& record: records) {
@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
     for (size_t i = 0; i < etas.size() - 1; i++) {
         float mean_eta = (etas[i] + etas[i + 1]) / 2;
         for (float pt: pts) {
-            std::cout << "eta: " << mean_eta << "  pt: " << pt << " -> jer = " << jer.getResolution(pt, mean_eta) << std::endl;
+            std::cout << "eta: " << mean_eta << "  pt: " << pt << " -> jer = " << jer.getResolution(JME::JetParameters().setJetPt(pt).setJetEta(mean_eta)) << std::endl;
         }
     }
 
