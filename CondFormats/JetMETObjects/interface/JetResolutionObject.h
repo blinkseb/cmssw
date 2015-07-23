@@ -10,9 +10,9 @@
 
 #include <TFormula.h>
 
-namespace YAML {
-    class Node;
-};
+namespace edm {
+    class EventSetup;
+}
 
 enum class Variation {
     NOMINAL = 0,
@@ -145,10 +145,10 @@ class JetResolutionObject {
         void dump() const;
         void saveToFile(const std::string& file) const;
 
-        const Record* getRecord(const std::vector<float>& bins);
-        float evaluateFormula(const Record& record, const std::vector<float>& variables);
+        const Record* getRecord(const std::vector<float>& bins) const;
+        float evaluateFormula(const Record& record, const std::vector<float>& variables) const;
 
-        const std::vector<Record>& getRecords() {
+        const std::vector<Record>& getRecords() const {
             return m_records;
         }
 
@@ -173,16 +173,20 @@ namespace JME {
                 // Empty
             }
 
-            float getResolution(float pt, float eta);
+            static const JetResolution get(const edm::EventSetup&, const std::string&);
 
-            void dump() {
+            float getResolution(float pt, float eta) const;
+
+            void dump() const {
                 m_object->dump();
             }
 
             // Advanced usage
-            JetResolutionObject* getResolutionObject() {
+            const JetResolutionObject* getResolutionObject() const {
                 return m_object.get();
             }
+
+
 
         private:
             std::shared_ptr<JetResolutionObject> m_object;
@@ -196,14 +200,16 @@ namespace JME {
                 // Empty
             }
 
-            float getScaleFactor(float eta, Variation variation = Variation::NOMINAL);
+            static const JetResolutionScaleFactor get(const edm::EventSetup&, const std::string&);
 
-            void dump() {
+            float getScaleFactor(float eta, Variation variation = Variation::NOMINAL) const;
+
+            void dump() const {
                 m_object->dump();
             }
 
             // Advanced usage
-            JetResolutionObject* getResolutionObject() {
+            const JetResolutionObject* getResolutionObject() const {
                 return m_object.get();
             }
 

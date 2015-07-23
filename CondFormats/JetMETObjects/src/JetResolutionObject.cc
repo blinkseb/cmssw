@@ -1,7 +1,10 @@
 #include <CondFormats/JetMETObjects/interface/JetResolutionObject.h>
 #include <CondFormats/JetMETObjects/interface/Utilities.h>
+#include <FWCore/Framework/interface/EventSetup.h>
+#include <FWCore/Framework/interface/ESHandle.h>
 
-#include <yaml-cpp/yaml.h>
+#include <CondFormats/DataRecord/interface/JetResolutionRcd.h>
+#include <CondFormats/DataRecord/interface/JetResolutionScaleFactorRcd.h>
 
 #include <cmath>
 #include <iostream>
@@ -186,7 +189,7 @@ void JetResolutionObject::saveToFile(const std::string& file) const {
 
 }
 
-const JetResolutionObject::Record* JetResolutionObject::getRecord(const std::vector<float>& bins) {
+const JetResolutionObject::Record* JetResolutionObject::getRecord(const std::vector<float>& bins) const {
     // Find record for bins
     if (bins.size() < m_definition.nBins())
         return nullptr;
@@ -214,7 +217,7 @@ const JetResolutionObject::Record* JetResolutionObject::getRecord(const std::vec
     return good_record;
 }
 
-float JetResolutionObject::evaluateFormula(const JetResolutionObject::Record& record, const std::vector<float>& variables) {
+float JetResolutionObject::evaluateFormula(const JetResolutionObject::Record& record, const std::vector<float>& variables) const {
 
     // Set parameters
     TFormula* formula = m_definition.getFormula();
@@ -247,7 +250,14 @@ namespace JME {
         m_object = std::shared_ptr<JetResolutionObject>(new JetResolutionObject(object));
     }
 
-    float JetResolution::getResolution(float pt, float eta) {
+    const JetResolution JetResolution::get(const edm::EventSetup& setup, const std::string& label) {
+       edm::ESHandle<JetResolutionObject> handle;
+       setup.get<JetResolutionRcd>().get(label, handle); 
+
+       return *handle;
+    }
+
+    float JetResolution::getResolution(float pt, float eta) const {
         const JetResolutionObject::Record* record = m_object->getRecord({eta});
         if (! record)
             return 1;
@@ -263,7 +273,14 @@ namespace JME {
         m_object = std::shared_ptr<JetResolutionObject>(new JetResolutionObject(object));
     }
 
-    float JetResolutionScaleFactor::getScaleFactor(float eta, Variation variation/* = Variation::NOMINAL*/) {
+    const JetResolutionScaleFactor JetResolutionScaleFactor::get(const edm::EventSetup& setup, const std::string& label) {
+       edm::ESHandle<JetResolutionObject> handle;
+       setup.get<JetResolutionScaleFactorRcd>().get(label, handle); 
+
+       return *handle;
+    }
+
+    float JetResolutionScaleFactor::getScaleFactor(float eta, Variation variation/* = Variation::NOMINAL*/) const {
         const JetResolutionObject::Record* record = m_object->getRecord({static_cast<float>(fabs(eta))});
         if (! record)
             return 1;
