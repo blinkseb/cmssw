@@ -3,13 +3,12 @@
 
 #include "CondFormats/Serialization/interface/Serializable.h"
 
+#include <unordered_map>
 #include <vector>
 #include <string>
 #include <tuple>
 #include <memory>
 #include <initializer_list>
-
-#include <boost/optional.hpp>
 
 #include <TFormula.h>
 
@@ -31,8 +30,8 @@ T clip(const T& n, const T& lower, const T& upper) {
 namespace JME {
     template <typename T, typename U>
     struct bimap {
-        typedef std::map<T, U> left_type;
-        typedef std::map<U, T> right_type;
+        typedef std::unordered_map<T, U> left_type;
+        typedef std::unordered_map<U, T> right_type;
 
         left_type left;
         right_type right;
@@ -55,7 +54,7 @@ namespace JME {
     };
 
     enum class Binning {
-        JetPt,
+        JetPt = 0,
         JetEta,
         JetAbsEta,
         JetE,
@@ -65,9 +64,34 @@ namespace JME {
         NPV,
     };
 
+};
+
+// Hash function for Binning enum class
+namespace std {
+    template<>
+    struct hash<JME::Binning> {
+        typedef JME::Binning argument_type;
+        typedef std::size_t result_type;
+
+        hash<uint8_t> int_hash;
+ 
+        result_type operator()(argument_type const& s) const {
+            return int_hash(static_cast<uint8_t>(s));
+        }
+    };
+};
+
+namespace JME {
 
     class JetParameters {
         public:
+            typedef std::unordered_map<Binning, float> value_type;
+
+            JetParameters() = default;
+            JetParameters(JetParameters&& rhs);
+            JetParameters(std::initializer_list<typename value_type::value_type> init);
+
+
             JetParameters& setJetPt(float pt);
             JetParameters& setJetEta(float eta);
             JetParameters& setJetE(float e);
@@ -75,13 +99,15 @@ namespace JME {
             JetParameters& setMu(float mu);
             JetParameters& setRho(float rho);
             JetParameters& setNPV(float npv);
+            JetParameters& set(const Binning& bin, float value);
+            JetParameters& set(const typename value_type::value_type& value);
 
             static const bimap<Binning, std::string> binning_to_string;
 
             std::vector<float> createVector(const std::vector<Binning>& binning) const;
 
         private:
-            std::map<Binning, float> m_values;
+            value_type m_values;
     };
 
 
@@ -222,6 +248,10 @@ namespace JME {
 
             const std::vector<Record>& getRecords() const {
                 return m_records;
+            }
+
+            const Definition& getDefinition() const {
+                return m_definition;
             }
 
         private:

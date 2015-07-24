@@ -32,46 +32,65 @@ namespace JME {
         {Binning::Rho, "Rho"}, {Binning::NPV, "NPV"}
     };
 
+    JetParameters::JetParameters(JetParameters&& rhs) {
+        m_values = std::move(rhs.m_values);
+    }
+
+    JetParameters::JetParameters(std::initializer_list<typename value_type::value_type> init) {
+        for (auto& i: init) {
+            set(i.first, i.second);
+        }
+    }
+
     JetParameters& JetParameters::setJetPt(float pt) {
         m_values[Binning::JetPt] = pt;
-
         return *this;
     }
 
     JetParameters& JetParameters::setJetEta(float eta) {
         m_values[Binning::JetEta] = eta;
         m_values[Binning::JetAbsEta] = fabs(eta);
-
         return *this;
     }
 
     JetParameters& JetParameters::setJetE(float e) {
         m_values[Binning::JetE] = e;
-
         return *this;
     }
 
     JetParameters& JetParameters::setJetArea(float area) {
         m_values[Binning::JetArea] = area;
-
         return *this;
     }
 
     JetParameters& JetParameters::setMu(float mu) {
         m_values[Binning::Mu] = mu;
-
         return *this;
     }
 
     JetParameters& JetParameters::setNPV(float npv) {
         m_values[Binning::NPV] = npv;
-
         return *this;
     }
 
     JetParameters& JetParameters::setRho(float rho) {
         m_values[Binning::Rho] = rho;
+        return *this;
+    }
 
+    JetParameters& JetParameters::set(const Binning& bin, float value) {
+        m_values.emplace(bin, value);
+
+        // Special case for eta
+        if (bin == Binning::JetEta) {
+            m_values.emplace(Binning::JetAbsEta, fabs(value));
+        }
+
+        return *this;
+    }
+
+    JetParameters& JetParameters::set(const typename value_type::value_type& value) {
+        set(value.first, value.second);
         return *this;
     }
 
